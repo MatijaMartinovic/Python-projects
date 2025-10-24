@@ -8,6 +8,7 @@ import time
 monitoring = []
 start_times = {}
 
+
 def compare_and_add_to_table(prcs: dict, entry) -> None:
     entry = entry.get()
     print("Comparing entry:", entry)
@@ -24,6 +25,14 @@ def compare_and_add_to_table(prcs: dict, entry) -> None:
                 if value:
                     item_id = tree.insert("", "end", values=(value, status, "00:00:00"))
                     start_times[item_id] = time.time()
+
+def update_table():
+    """
+    - check if entries in table are still running
+    - if not, remove them
+    - add time elapsed to total time
+    """
+    ...
 
 def update_elapsed_times():
     now = time.time()

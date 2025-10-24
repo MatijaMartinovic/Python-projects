@@ -1,7 +1,13 @@
 import yt_dlp
+try:
+    from yt_dlp.utils import DownloadError as YTDLDownloadError # type: ignore
+except Exception:
+    class YTDLDownloadError(Exception):
+        pass
 import tkinter as tk
 from tkinter import ttk
 import os
+from typing import Any, cast
 
 def get_default_videos_folder():
     videos_folder = os.path.join(os.path.expanduser("~"), "Videos")
@@ -12,9 +18,8 @@ def get_video_info(url, frame):
         'quiet': True,
         'skip_download': True,
     }
-
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        with yt_dlp.YoutubeDL(cast(Any, ydl_opts)) as ydl:
             info = ydl.extract_info(url, download=False)
     except Exception as e:
         # show error in GUI frame and stop
@@ -55,27 +60,43 @@ def download_video(entry, frame):
     print(url)
     print(f"Downloading from {url}")
     ydl_opts = {
-        'format': 'bestvideo[ext=mp4][vcodec^=avc1]+bestaudio[ext=m4a]/best[ext=mp4]',
+        # allow a flexible selection and let ffmpeg merge streams
+        'format': 'bestvideo+bestaudio/best',
         'merge_output_format': 'mp4',
         'outtmpl': os.path.join(get_default_videos_folder(), "%(title)s.%(ext)s"),
         'postprocessors': [
             {'key': 'FFmpegMetadata'},
             {'key': 'EmbedThumbnail'}
         ],
-        # use raw string for windows path or ensure correct escaping
         'ffmpeg_location': r'C:\Users\matij\OneDrive\Documents\ffmpeg-2025-08-04-git-9a32b86307-essentials_build\bin\ffmpeg.exe'
     }
 
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        with yt_dlp.YoutubeDL(cast(Any, ydl_opts)) as ydl:
             ydl.download([url])
     except Exception as e:
-        print("Download error:", e)
-        for widget in frame.winfo_children():
-            widget.destroy()
-        ttk.Label(frame, text="Download error:", font=("Calibri", 14, "bold")).pack(pady=5)
-        ttk.Label(frame, text=str(e), font=("Calibri", 12)).pack(pady=5)
-        return
+        # If format not available, retry with a very permissive fallback
+        err_str = str(e).lower()
+        if 'requested format' in err_str or 'format not available' in err_str or isinstance(e, YTDLDownloadError):
+            print("Preferred format not available — retrying with fallback 'best' format.")
+            ydl_opts['format'] = 'best'
+            try:
+                with yt_dlp.YoutubeDL(cast(Any, ydl_opts)) as ydl:
+                    ydl.download([url])
+            except Exception as e2:
+                print("Download error (fallback):", e2)
+                for widget in frame.winfo_children():
+                    widget.destroy()
+                ttk.Label(frame, text="Download error:", font=("Calibri", 14, "bold")).pack(pady=5)
+                ttk.Label(frame, text=str(e2), font=("Calibri", 12)).pack(pady=5)
+                return
+        else:
+            print("Download error:", e)
+            for widget in frame.winfo_children():
+                widget.destroy()
+            ttk.Label(frame, text="Download error:", font=("Calibri", 14, "bold")).pack(pady=5)
+            ttk.Label(frame, text=str(e), font=("Calibri", 12)).pack(pady=5)
+            return
 
     print("Downloaded!")
     clear_textbox(entry)

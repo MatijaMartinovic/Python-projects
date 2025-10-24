@@ -16,9 +16,14 @@ def get_video_info(url, frame):
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
-    except yt_dlp.utils.DownloadError:
-        print("ERROR FOUND HERE")
-    
+    except Exception as e:
+        # show error in GUI frame and stop
+        for widget in frame.winfo_children():
+            widget.destroy()
+        ttk.Label(frame, text="Error getting video info:", font=("Calibri", 14, "bold")).pack(pady=5)
+        ttk.Label(frame, text=str(e), font=("Calibri", 12)).pack(pady=5)
+        return
+
     info = {
         "title": info.get('title'), # type: ignore
         "author": info.get('uploader'), # type: ignore
@@ -26,10 +31,9 @@ def get_video_info(url, frame):
         "Date": info.get('upload_date') # type: ignore
     }
 
-    for widget in frame.winfo_children(): # makes sure it will overwrite existing frame instead of writing underneath
+    for widget in frame.winfo_children():
         widget.destroy()
 
-    
     ttk.Label(frame, text="Video Information", font=("Calibri", 14, "bold")).pack(pady=5)
 
     for key, value in info.items():
@@ -38,8 +42,8 @@ def get_video_info(url, frame):
 
         ttk.Label(info_frame, text=f"{key.capitalize()}:", width=10, anchor='e', font=("Calibri", 12, "bold")).pack(side='left')
         ttk.Label(info_frame, text=value, anchor='w', font=("Calibri", 12)).pack(side='left', fill='x', expand=True) # type: ignore
-    
-    ttk.Label(frame, text="Finished downloading!", font=("Calibri", 16, "bold")).pack()
+
+    ttk.Label(frame, text="Finished fetching info!", font=("Calibri", 16, "bold")).pack()
 
 
 def clear_textbox(entry):
@@ -58,13 +62,23 @@ def download_video(entry, frame):
             {'key': 'FFmpegMetadata'},
             {'key': 'EmbedThumbnail'}
         ],
-        'ffmpeg_location': 'C:/Users/matij/OneDrive/Documents/ffmpeg-2025-08-04-git-9a32b86307-essentials_build/bin/ffmpeg.exe'
+        # use raw string for windows path or ensure correct escaping
+        'ffmpeg_location': r'C:\Users\matij\OneDrive\Documents\ffmpeg-2025-08-04-git-9a32b86307-essentials_build\bin\ffmpeg.exe'
     }
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
+
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+    except Exception as e:
+        print("Download error:", e)
+        for widget in frame.winfo_children():
+            widget.destroy()
+        ttk.Label(frame, text="Download error:", font=("Calibri", 14, "bold")).pack(pady=5)
+        ttk.Label(frame, text=str(e), font=("Calibri", 12)).pack(pady=5)
+        return
+
     print("Downloaded!")
     clear_textbox(entry)
-    #entry.delete(0, tk.END)
     print("Finished Downloading")
     get_video_info(url, frame)
     

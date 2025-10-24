@@ -25,8 +25,7 @@ def calculate_bits():
 
     print(int(sum))
 
-def dec_to_bin():
-    dec_number = int(input("Enter a number: "))
+def dec_to_bin(dec_number):
     a = dec_number
     binary = ""
 
@@ -39,6 +38,7 @@ def dec_to_bin():
             dec_number /= 2
     
     print(f"Number {a} in binary is: {binary[::-1]}")
+    return binary[::-1]
 
 
 

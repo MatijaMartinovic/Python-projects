@@ -29,28 +29,50 @@ title_label.pack(padx=30, pady=5)
 content_frame = ttk.Frame(main_frame)
 content_frame.pack(anchor="w", padx=30)
 
+ttk.Label(content_frame, text="Select conversion:", font=("Arial", 12)).grid(row=0, column=0, sticky="w", pady=5)
+conversion_var = tk.StringVar(value="Dec -> Bin")
+conversion_choices = ["Dec -> Bin", "Dec -> Hex", "Dec -> Oct"]
+conversion_box = ttk.Combobox(content_frame, textvariable=conversion_var, values=conversion_choices, state="readonly", width=12)
+conversion_box.grid(row=0, column=1, sticky="w", padx=(10, 0))
+
 # Input row
-ttk.Label(content_frame, text="Input number:", font=("Arial", 12)).grid(row=0, column=0, sticky="w", pady=5)
+ttk.Label(content_frame, text="Input number:", font=("Arial", 12)).grid(row=1, column=0, sticky="w", pady=5)
 entry = ttk.Entry(content_frame, width=15, font=("Arial", 12))
-entry.grid(row=0, column=1, sticky="w", padx=(10, 0), pady=5)
+entry.grid(row=1, column=1, sticky="w", padx=(10, 0), pady=5)
 
 # Result label
 result_label = ttk.Label(content_frame, text="Result:", font=("Arial", 12))
-result_label.grid(row=1, column=0, columnspan=2, sticky="w", pady=(15, 5))
+result_label.grid(row=2, column=0, columnspan=2, sticky="w", pady=(15, 5))
 
 # Button area
 button_frame = ttk.Frame(content_frame)
-button_frame.grid(row=2, column=0, columnspan=2, sticky="w", pady=10)
+button_frame.grid(row=3, column=0, columnspan=2, sticky="w", pady=10)
 
 
 # === Functions ===
-def do_logic():
+def quick_logic():
     try:
-        result = dec_to_bin(int(entry.get()))
+        result = dec_to_bin_short(int(entry.get()))
         display_results(result)
     except ValueError:
         display_results("Invalid Input!")
     return result
+
+def do_logic():
+    selected = conversion_var.get()
+
+    try:
+        if selected == "Dec -> Bin":
+            result = dec_to_bin_short(int(entry.get()))
+        elif selected == "Dec -> Hex":
+            result = dec_to_hex(int(entry.get()))
+        elif selected == "Dec -> Oct":
+            result = dec_to_oct(int(entry.get()))
+    except ValueError:
+        result = "Invalid input!"
+    except RuntimeError:
+        result = "Error!"
+    display_results(result)
 
 def clear_input():
     entry.delete(0, tk.END)
@@ -68,7 +90,7 @@ def add_button(text, command):
 
 
 # Add your first button
-add_button("Double Number", do_logic)
+add_button("Translate", do_logic)
 
 
 # === Run ===

@@ -25,7 +25,16 @@ def calculate_bits():
 
     print(int(sum))
 
-def dec_to_bin(dec_number):
+def dec_to_bin_short(dec_number):
+    return str(bin(dec_number)[2:])
+
+def dec_to_hex(dec):
+    return str(hex(dec)[2:])
+
+def dec_to_oct(dec):
+    return str(oct(dec))[2:]
+
+def dec_to_bin(dec_number:float) -> str:
     a = dec_number
     binary = ""
 
@@ -44,4 +53,5 @@ def dec_to_bin(dec_number):
 
 
 if __name__ == "__main__":
-    exit
+    print(dec_to_hex(15))
+    print(dec_to_oct(15))
